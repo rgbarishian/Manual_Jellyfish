@@ -14,6 +14,7 @@ import time
 start_time = time.time()
 
 #User inputs
+print("Select sextractor.dat")
 filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
 scale = float(input("Scale (kpc/\"): "))
 
