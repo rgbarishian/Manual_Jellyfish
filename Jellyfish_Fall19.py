@@ -4,23 +4,20 @@
 
 #Import libraries
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import math
 from astropy.io import ascii
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 import time
-start_time = time.time()
 
 #User inputs
 print("Select sextractor.dat")
 filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
 scale = float(input("Scale (kpc/\"): "))
-
-#Import Data
+start_time = time.time()
 #data = ascii.read('/home/ryan/Documents/Manual_Jelly/Fall_19/HST_Relics/A2495/sextractor.dat') #directory of dat file
 data = ascii.read(filename) #new
+#Import Data
 #Define arrays of data from columns in data
 Flux_all = data['FLUX_BEST']
 Kron_all = data['KRON_RADIUS']
@@ -31,7 +28,7 @@ B_all = data['B_WORLD']
 #Constants
 #Common Scales: #A520: 3.325;A68: 3.903; A370: 5.162; AA1758a: 4.244 ;A2744: 4.536; to to calculate use ned wrights calculator H0 = .7, Omega-m = .3, flat
 outerRad = 40/scale/3600
-sigma = 3.0
+sigma = 2.5
 
 #Specify threasholds for a galaxy
 min_gal_flux = 15
@@ -60,9 +57,9 @@ B_Gal = B_Gal[Good_GalIndex]
 fid = open('galaxy.reg', 'w')
 fid.close()
 for i in range(len(Flux_Gal)):
-        fid = open('galaxy.reg','a')
-        fid.write("j2000; annulus %fd %fd %fd %fd\n" % (X_Gal[i], Y_Gal[i], B_Gal[i] * Kron_Gal[i], outerRad))
-        fid.close()
+    fid = open('galaxy.reg','a')
+    fid.write("j2000; annulus %fd %fd %fd %fd\n" % (X_Gal[i], Y_Gal[i], B_Gal[i] * Kron_Gal[i], outerRad))
+fid.close()
 
 #Remove Galaxies from main array, leaving array of independent stars/sources
 Gal_X_Not = X_all[np.logical_not(GalIndex)]
@@ -76,13 +73,13 @@ Kron_Not = Kron_all[np.logical_not(GalIndex)]
 for i in range(len(Gal_Flux_Not)):
     fid = open('nongalaxy.reg','a')
     fid.write("j2000; point %fd %fd\n" % (Gal_X_Not[i], Gal_Y_Not[i]))
-    fid.close()
+fid.close()
 
 #Create file that all sources in annulus will be exported to (can be removed in final verision)
 fid = open('Sources_inany_Annulus.reg', 'w')
 fid.close()
 
-#Regions file of possible Jellyfish Galaxies
+#Create regions file of possible Jellyfish Galaxies
 fid = open('Possible_Jellies.reg', 'w')
 fid.close()
 
@@ -103,7 +100,7 @@ for i in range(len(X_Gal)):
     fid = open('Sources_inany_Annulus.reg','a')
     for j in range(len(X_Source_in_Annulus)):
         fid.write("j2000; point %fd %fd\n" % (X_Source_in_Annulus[j], Y_Source_in_Annulus[j]))
-        fid.close
+    fid.close
     #Get angle between x,y position of source with origin being galaxy
     X_Shifted = []
     Y_Shifted = []
@@ -142,17 +139,18 @@ for i in range(len(X_Gal)):
             Max_Count_in_3Bin_Segment = Count_in_3Bin_Segment
     Non_Max_Counts = Total_in_Annulus - Max_Count_in_3Bin_Segment
     #Calculating if sources in annulus are unevenly distributed
-    if (Max_Count_in_3Bin_Segment - Non_Max_Counts)/math.sqrt(Max_Count_in_3Bin_Segment) >= sigma:
+    if np.logical_and((Max_Count_in_3Bin_Segment - Non_Max_Counts)/math.sqrt(Max_Count_in_3Bin_Segment) >= sigma, Max_Count_in_3Bin_Segment>10):
         fid = open('Possible_Jellies.reg','a')
         fid.write("j2000; annulus %fd %fd %fd %fd\n" % (X_Gal[i], Y_Gal[i], B_Gal[i] * Kron_Gal[i], outerRad))
-        fid.close()
+        #fid.close()
         Radius_Annulus=[]
+        #fid = open('Possible_Jellies.reg','a')
         for k in range(len(X_Source_in_Annulus)):
             Radius_Not = B_Source_in_Annulus[k] * Kron_Source_in_Annulus[k]
             Radius_Annulus.append(Radius_Not)
-            fid = open('Possible_Jellies.reg','a')
+            
             fid.write("j2000; circle %fd %fd %fd\n" % (X_Source_in_Annulus[k], Y_Source_in_Annulus[k], Radius_Annulus[k]))
-            fid.close()
+        fid.close()
 print(filename)
 #Diagnostics Output
 print("\n\nDiagnostics\nGalaxy: %s\nScale: %f\n# of Galaxies: %d" %(filename, scale, len(X_Gal)))
