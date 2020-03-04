@@ -115,7 +115,6 @@ for i in range(len(X_Gal)):
     bins = np.arange(0,361,30)
     Total_in_Annulus = sum(Counts_in_Bins)
     
-    score = 0
     Counts_in_Segments=[]
     Max_Count_in_3Bin_Segment = 0
     for j in range(len(Counts_in_Bins)):
@@ -138,8 +137,9 @@ for i in range(len(X_Gal)):
         if Count_in_3Bin_Segment > Max_Count_in_3Bin_Segment:
             Max_Count_in_3Bin_Segment = Count_in_3Bin_Segment
     Non_Max_Counts = Total_in_Annulus - Max_Count_in_3Bin_Segment
+    Non_Max_Average = Non_Max_Counts/11
     #Calculating if sources in annulus are unevenly distributed
-    if np.logical_and((Max_Count_in_3Bin_Segment - Non_Max_Counts)/math.sqrt(Max_Count_in_3Bin_Segment) >= sigma, Max_Count_in_3Bin_Segment>10):
+    if np.logical_and((Max_Count_in_3Bin_Segment - Non_Max_Average)/math.sqrt(Non_Max_Average) >= sigma, Max_Count_in_3Bin_Segment>6):
         fid = open('Possible_Jellies.reg','a')
         fid.write("j2000; annulus %fd %fd %fd %fd\n" % (X_Gal[i], Y_Gal[i], B_Gal[i] * Kron_Gal[i], outerRad))
         #fid.close()
